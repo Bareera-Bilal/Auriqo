@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "+w07LjqxI14=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Bareera Bilal\\OneDrive\\Desktop\\Auqiro\\Auriqo-Web-Api-Backend\\Auriqo-Web-Api-Backend.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Bareera Bilal\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.0\\microsoft.aspnetcore.openapi.9.0.0.nupkg.sha512",
+    "C:\\Users\\Bareera Bilal\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
