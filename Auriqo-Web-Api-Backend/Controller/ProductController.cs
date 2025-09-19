@@ -236,6 +236,8 @@ namespace Auriqo_Web_Api_Backend.Controllers
             {
                 var product = await dbContext.Products.FindAsync(productId);
                 return Ok(new { message = " 1 PRODUCT FOUND", payload = product });
+
+
             }
             catch (System.Exception)
             {
