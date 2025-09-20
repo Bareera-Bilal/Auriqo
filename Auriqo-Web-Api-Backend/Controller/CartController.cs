@@ -119,6 +119,33 @@ namespace Auriqo_Web_Api_Backend.Controllers
             }
         }
 
+[HttpPost("DeleteFromCart")]
+
+public async Task <IActionResult> RemoveFromCart (Guid productId)
+{
+
+try
+{
+    var token = HttpContext.Request.Cookies ["Auriqo-Authorization-Token"];
+
+    if (token == null){
+        return StatusCode    (403, new {message = "PLEASE LOGIN"});
+    }
+
+    var userId = tokenService.VerifyTokenAndGetId (token);
+
+    if(userId == Guid.Empty)
+    {
+       return StatusCode(404, new {message = "PLEASE LOGIN "});
+    }
+}
+catch (System.Exception)
+{
+    
+    throw;
+}
+
+}
 
 
 
