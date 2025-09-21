@@ -16,7 +16,8 @@ namespace Auriqo_Web_Api_Backend.Controllers
         private readonly SqlDbContext dbContext;
         private readonly ITokenService tokenService;
 
-        public CartController (SqlDbContext dbContext, ITokenService tokenService){
+        public CartController(SqlDbContext dbContext, ITokenService tokenService)
+        {
             this.dbContext = dbContext;
             this.tokenService = tokenService;
         }
@@ -24,7 +25,8 @@ namespace Auriqo_Web_Api_Backend.Controllers
 
 
         [HttpPost("addtocart")]
-        public async Task<IActionResult> AddToCart(Guid productId, int qty){
+        public async Task<IActionResult> AddToCart(Guid productId, int qty)
+        {
 
             try
             {
@@ -32,31 +34,31 @@ namespace Auriqo_Web_Api_Backend.Controllers
                 //We have to fetch token first
                 var token = HttpContext.Request.Cookies["Auriqo-Authorization-Token"];
 
-                if(string.IsNullOrEmpty(token))
+                if (string.IsNullOrEmpty(token))
                 {
-                    return StatusCode(403, new{ message =" SESSION EXPIRED, KINDLY LOGIN AGAIN"});
+                    return StatusCode(403, new { message = " SESSION EXPIRED, KINDLY LOGIN AGAIN" });
                 }
 
                 //We have to verify token
                 var userId = tokenService.VerifyTokenAndGetId(token);
 
-                if(userId == Guid.Empty)
+                if (userId == Guid.Empty)
                 {
-                    return Unauthorized (new{message= "UMAUTHORIZED TO ACCESS, KINDLY LOGIN AGAIN"})
+                    return Unauthorized(new { message = "UMAUTHORIZED TO ACCESS, KINDLY LOGIN AGAIN" })
 
                 }
 
                 //FIND PRODUCT BY IT'S ID
                 var product = await dbContext.Products.FindAsync(productId);
 
-                if(product == null)
+                if (product == null)
                 {
-                    return NotFound (new{message ="PRODUCT NOT FOUND"});
+                    return NotFound(new { message = "PRODUCT NOT FOUND" });
                 }
 
                 var cart = await dbContext.Carts.Include(cart => cart.CartProducts).FirstOrDefaultAsync(cart => cart.UserId == userId);
 
-                if(cart == null)
+                if (cart == null)
                 {
 
                     var newCart = new Cart
@@ -83,9 +85,9 @@ namespace Auriqo_Web_Api_Backend.Controllers
 
                 else
                 {
-                    var existingCartProduct = await dbContext.CartProducts.FirstOrDefaultAsync(cp => cp.ProductId ==productId && cp.CartId == cart.CartId);
+                    var existingCartProduct = await dbContext.CartProducts.FirstOrDefaultAsync(cp => cp.ProductId == productId && cp.CartId == cart.CartId);
 
-                    if(existingCartProduct != null)
+                    if (existingCartProduct != null)
                     {
                         existingCartProduct.Quantity += qty;
                     }
@@ -108,48 +110,79 @@ namespace Auriqo_Web_Api_Backend.Controllers
                     await dbContext.SaveChangesAsync();
 
                     // UPDATE PENDING
-                    return Ok (new {message = "CART UPDATED SUCCESSFULLY", payload = cart});
+                    return Ok(new { message = "CART UPDATED SUCCESSFULLY", payload = cart });
 
                 }
             }
             catch (System.Exception)
             {
-                
+
                 throw;
             }
         }
 
-[HttpPost("DeleteFromCart")]
+        [HttpPost("RemoveFromCart")]
 
-public async Task <IActionResult> RemoveFromCart (Guid productId)
-{
+        public async Task<IActionResult> RemoveFromCart(Guid productId)
+        {
 
-try
-{
-    var token = HttpContext.Request.Cookies ["Auriqo-Authorization-Token"];
+            try
+            {
+                var token = HttpContext.Request.Cookies["Auriqo-Authorization-Token"];
 
-    if (token == null){
-        return StatusCode    (403, new {message = "PLEASE LOGIN"});
-    }
+                if (token == null)
+                {
+                    return StatusCode(403, new { message = "PLEASE LOGIN" });
+                }
 
-    var userId = tokenService.VerifyTokenAndGetId (token);
+                var userId = tokenService.VerifyTokenAndGetId(token);
 
-    if(userId == Guid.Empty)
-    {
-       return StatusCode(404, new {message = "PLEASE LOGIN "});
-    }
-}
-catch (System.Exception)
-{
-    
-    throw;
-}
-
-}
+                if (userId == Guid.Empty)
+                {
+                    return StatusCode(404, new { message = "PLEASE LOGIN " });
+                }
 
 
+                //CART FETCHING    SUB QUERY CART PRODUCT FETCH
+                var cart = await dbContext.Carts.Include(cart => cart.CartProducts).FirstOrDefaultAsync(cart => cart.UserId == userId);
 
-        
+                if (cart == null)
+                {
+                    return NotFound(new { message = "CART NOT FOUND" });
+                }
+
+                //BUFFER //LIST //QUERY IS VERY FAST
+                var cartproduct = cart.CartProducts.FirstOrDefault(cp => cp.CartId == cart.CartId && cp.ProductId == productId);
+
+                if (cartproduct == null)
+                {
+                    return NotFound(new { message = "CART ITEM NOT FOUND" });
+                }
+
+                var remove = dbContext.CartProducts.Remove(cartproduct);
+
+                if (remove != null)
+                {
+                    cart.CartTotal -= cartproduct.ProductPrice * cartproduct.Quantity;
+                    await dbContext.SaveChangesAsync();
+                    return Ok(new { message = "ITEM REMOVED FROM CART", payload = cart });
+                }
+                else
+                {
+                    return BadRequest(new { message = "SOMETHING WENT WRONG" });
+                }
+            }
+            catch (System.Exception)
+            {
+
+                throw;
+            }
+
+        }
+
+
+
+
 
     }
 
