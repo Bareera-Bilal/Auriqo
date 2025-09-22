@@ -2,3 +2,9 @@
 
 # IDE0008: Use explicit type
 csharp_style_var_elsewhere = true
+
+# CS8602: Dereference of a possibly null reference.
+dotnet_diagnostic.CS8602.severity = none
+
+# CS8604: Possible null reference argument.
+dotnet_diagnostic.CS8604.severity = none

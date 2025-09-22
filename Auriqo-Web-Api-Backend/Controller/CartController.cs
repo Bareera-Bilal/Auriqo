@@ -1,8 +1,10 @@
 using Auriqo_Web_Api_Backend.Interfaces;
+using Auriqo_Web_Api_Backend.Middlewares;
 using Auriqo_Web_Api_Backend.Models.DomainModels;
 using Auriqo_Web_Api_Backend.Models.JunctionModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 
 namespace Auriqo_Web_Api_Backend.Controllers
@@ -22,7 +24,8 @@ namespace Auriqo_Web_Api_Backend.Controllers
             this.tokenService = tokenService;
         }
 
-
+         
+         [Authorize]
 
         [HttpPost("addtocart")]
         public async Task<IActionResult> AddToCart(Guid productId, int qty)
@@ -30,23 +33,27 @@ namespace Auriqo_Web_Api_Backend.Controllers
 
             try
             {
+                var FetchUserIDFromItems = HttpContext.Items["userId"].ToString();
+
+                var userId = Guid.Parse(FetchUserIDFromItems);
 
                 //We have to fetch token first
-                var token = HttpContext.Request.Cookies["Auriqo-Authorization-Token"];
+                // var token = HttpContext.Request.Cookies["Auriqo-Authorization-Token"];
 
-                if (string.IsNullOrEmpty(token))
-                {
-                    return StatusCode(403, new { message = " SESSION EXPIRED, KINDLY LOGIN AGAIN" });
-                }
+                // if (string.IsNullOrEmpty(token))
+                // {
+                //     return StatusCode(403, new { message = " SESSION EXPIRED, KINDLY LOGIN AGAIN" });
+                // }
 
-                //We have to verify token
-                var userId = tokenService.VerifyTokenAndGetId(token);
+                // //We have to verify token
+                // var userId = tokenService.VerifyTokenAndGetId(token);
 
-                if (userId == Guid.Empty)
-                {
-                    return Unauthorized(new { message = "UMAUTHORIZED TO ACCESS, KINDLY LOGIN AGAIN" })
+                // if (userId == Guid.Empty)
+                // {
+                //     return Unauthorized(new { message = "UMAUTHORIZED TO ACCESS, KINDLY LOGIN AGAIN" });
 
-                }
+                // }
+
 
                 //FIND PRODUCT BY IT'S ID
                 var product = await dbContext.Products.FindAsync(productId);
@@ -77,7 +84,7 @@ namespace Auriqo_Web_Api_Backend.Controllers
                     };
 
                     await dbContext.Carts.AddAsync(newCart);
-                    await dbContext.CartProducts.AddAsync(cartProduct);
+                    await dbContext.CartProducts.AddAsync(CartProduct);
                     await dbContext.SaveChangesAsync();
                     return Ok(new { message = "cart created", payload = newCart });
 
@@ -121,8 +128,9 @@ namespace Auriqo_Web_Api_Backend.Controllers
             }
         }
 
-        [HttpPost("RemoveFromCart")]
 
+
+        [HttpPost("RemoveFromCart")]
         public async Task<IActionResult> RemoveFromCart(Guid productId)
         {
 
@@ -177,6 +185,67 @@ namespace Auriqo_Web_Api_Backend.Controllers
 
                 throw;
             }
+
+        }
+
+
+
+
+
+        [HttpPost("CreateOrder")]
+        public async Task<IActionResult> CreateOrder(Guid UserId, Guid productId, Guid OrderId)
+
+        {
+
+            //We have to fetch token first
+                var token = HttpContext.Request.Cookies["Auriqo-Authorization-Token"];
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    return StatusCode(403, new { message = " SESSION EXPIRED, KINDLY LOGIN AGAIN" });
+                }
+
+                //We have to verify token
+                var userId = tokenService.VerifyTokenAndGetId(token);
+
+                if (userId == Guid.Empty)
+                {
+                    return Unauthorized(new { message = "UMAUTHORIZED TO ACCESS, KINDLY LOGIN AGAIN" });
+
+                }
+
+
+
+            var cart = await dbContext.Carts.Include(c => c.CartProducts).FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
+            {
+                return NotFound (new { message = "Cart not found" });
+            }
+
+
+            var order = new Order
+            {
+                UserId = UserId,
+                OrderId = OrderId,
+                ProductId = productId,
+                CreatedAt = DateTime.UtcNow,
+                AddressId = Guid.Empty, 
+                OrderProducts = new List<OrderProduct>(), 
+                TotalPrice = cart.CartTotal
+            };
+
+
+            dbContext.Orders.Add(order);
+            await dbContext.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "ORDER CREATED SUCCESSFULLY",payload = order
+            });
+
+
+
 
         }
 

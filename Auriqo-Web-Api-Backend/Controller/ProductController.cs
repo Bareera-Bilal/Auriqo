@@ -1,6 +1,7 @@
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Auriqo_Web_Api_Backend.Middlewares;
 using Auriqo_Web_Api_Backend.Models.DomainModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,8 @@ namespace Auriqo_Web_Api_Backend.Controllers
             this.dbContext = dbContext;
         }
 
-
+        
+        [Authorize]
         [HttpPost("Create")]
         public async Task<IActionResult> CreateProduct(Product product)
         {
@@ -47,7 +49,7 @@ namespace Auriqo_Web_Api_Backend.Controllers
             }
         }
 
-
+        [Authorize]
         [HttpGet("archive")]
 
         public async Task<IActionResult> ArchiveProduct(Guid productId)
@@ -89,7 +91,7 @@ namespace Auriqo_Web_Api_Backend.Controllers
             }
         }
 
-
+         [Authorize]
         [HttpGet("unarchive")]
 
         public async Task<IActionResult> UnArchiveProduct(Guid productId)
@@ -132,7 +134,7 @@ namespace Auriqo_Web_Api_Backend.Controllers
         }
 
 
-
+         [Authorize]
         [HttpGet("delete")]
 
         public async Task<IActionResult> DeleteProduct(Guid productId)
@@ -170,7 +172,7 @@ namespace Auriqo_Web_Api_Backend.Controllers
 
         }
 
-
+        [Authorize]
         [HttpPut("update")]
 
         public async Task<IActionResult> UpdateProduct(Guid productId, Product product)
