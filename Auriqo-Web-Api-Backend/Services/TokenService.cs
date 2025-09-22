@@ -4,19 +4,23 @@ using Auriqo_Web_Api_Backend.Interfaces;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Auriqo_Web_Api_Backend.Enum;
 
 
 namespace Auriqo_Web_Api_Backend.Services;
 
-public class TokenService : ITokenService  // inheritance 
+public class TokenService : ITokenService// inheritance 
 
 {
     private readonly string _secretKey;     // private feild 
-    public TokenService( string SecretKey)
+
+
+    public TokenService(IConfiguration configuration)
     {
-        _secretKey = SecretKey;
+        _secretKey = configuration["Jwt:SecretKey"] ?? throw new ArgumentNullException("SecretKey is not configured.");
     }
 
+  // code snippets 
     public string CreateToken(Guid userId, string email, string username, int time)
     {
         var tokenHandler = new JwtSecurityTokenHandler();   // intializing new instance of  JwtSecurityTokenHandler
@@ -38,10 +42,14 @@ public class TokenService : ITokenService  // inheritance
         };
 
         var token = tokenHandler.CreateToken(payload);     // creation of token 
+
         return tokenHandler.WriteToken(token);        // returning of token 
     }
 
-
+    public string CreateToken(Guid userId, string email, string username, UserType type, int time)
+    {
+        throw new NotImplementedException();
+    }
 
     public Guid VerifyTokenAndGetId(string token)
     {

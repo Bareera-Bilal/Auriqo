@@ -13,6 +13,8 @@ public Guid OrderId { get; set; } = Guid.NewGuid();
 public required Guid UserId { get; set; }  // FOREIGN KEY 
 [ForeignKey("UserId")]
 
+public Guid ProductId { get; set; } = Guid.NewGuid();
+
 public User? Buyer { get; set; }  // NAVIGATION PROPERTY
 public required Guid AddressId { get; set; }  // FOREIGN KEY 
 [ForeignKey("AddressId")]
@@ -21,11 +23,14 @@ public Address? Address { get; set; }   // NAVIGATION PROPERTY
 public required ICollection<OrderProduct> OrderProducts { get; set; } = [];
 
 public required decimal TotalPrice { get; set; } = 0;
+public int Qty {get; set;} = 0;
 public  DateTime DateCreated { get; set; } = DateTime.UtcNow;
 public  OrderStatus OrderStatus { get; set; } = OrderStatus.Pending;
 public  PaymentMode PaymentMode { get; set; } = PaymentMode.None;
 public  PaymentStatus PaymentStatus { get; set; } = PaymentStatus.pending;
 public  DateTime? ShippingDate { get; set; } =DateTime.UtcNow.AddDays(7);
+ public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
 }
 

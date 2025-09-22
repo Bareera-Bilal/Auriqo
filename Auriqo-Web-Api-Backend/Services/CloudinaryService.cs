@@ -2,79 +2,110 @@ using System;
 using Auriqo_Web_Api_Backend.Interfaces;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using Microsoft.AspNetCore.Http;
-
-
-
+using dotenv.net;
 
 namespace Auriqo_Web_Api_Backend.Services;
 
 public class CloudinaryService : ICloudinaryService
 {
 
-
     private readonly Cloudinary cloudinary;
 
-    public CloudinaryService( string cloudinaryUrl)
+    // private readonly string  url;
+    public CloudinaryService()
     {
+        // this.cloudinary = cloudinary;
 
-        this.cloudinary = new Cloudinary(cloudinaryUrl);
+        // this.url = configuration["Cloudinary:CLOUDINARY_URL"] ?? throw new ArgumentNullException("Cloudinary Url is not configured.");
 
-        cloudinary.Api.Secure = true;
+
+        try
+        {
+            DotEnv.Load(options: new DotEnvOptions(probeForEnv: true));
+        }
+        catch (System.Exception ex)
+        {
+
+            throw new InvalidOperationException("Failed to load .env file.", ex);
+        }
+
+
+        var CloudinaryUrl = Environment.GetEnvironmentVariable("CLOUDINARY_URL");
+
+        this.cloudinary = new Cloudinary(CloudinaryUrl) { Api = { Secure = true } };
+
+
     }
 
 
-    public async Task<string> UploadImageAsync(IFormFile image, string folderName)
+
+    public async Task<string> UploadImageAsync(IFormFile image)
     {
         if (image == null || image.Length == 0)
         {
-            throw new ArgumentNullException("File is null");
+            throw new ArgumentException("Image is missing.");
         }
 
         using var stream = image.OpenReadStream();
 
 
-        var uploadParams = new ImageUploadParams()
+        var uploadParams = new ImageUploadParams
         {
-
             File = new FileDescription(image.FileName, stream),
             UseFilename = true,
             UniqueFilename = false,
             Overwrite = true,
-            Folder = folderName
+            Folder = "Trinkle"
+            // Transformation = new Transformation().Width(150).Height(150).Crop("fill")
         };
 
         var uploadResult = await cloudinary.UploadAsync(uploadParams);
 
+        if (uploadResult.Error != null)
+        {
+            throw new InvalidOperationException($"Cloudinary upload failed: {uploadResult.Error.Message}");
+        }
+
         return uploadResult.SecureUrl.ToString();
-
-
-
     }
 
-    public async Task<string> UploadVideoAsync(IFormFile video, string folderName)
+    public Task<string> UploadMultipleImageAsync(IFormFile imgArr)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<string> UploadVideoAsync(IFormFile video)
     {
         try
         {
             if (video == null || video.Length == 0)
             {
-                throw new ArgumentNullException("File is null");
+                throw new ArgumentException("video is missing.");
             }
+
 
             using var stream = video.OpenReadStream();
 
-            var uploadParams = new VideoUploadParams
+
+            var uploadParams = new VideoUploadParams()
             {
                 File = new FileDescription(video.FileName, stream),
                 UseFilename = true,
                 UniqueFilename = false,
                 Overwrite = true,
-                Folder = folderName
-
+                Folder = "Trinkle"
             };
+
             var uploadResult = await cloudinary.UploadAsync(uploadParams);
 
+            if (uploadResult.Error != null)
+            {
+                throw new InvalidOperationException($"Cloudinary upload failed: {uploadResult.Error.Message}");
+            }
+
+
             return uploadResult.SecureUrl.ToString();
+
 
 
         }
@@ -84,49 +115,4 @@ public class CloudinaryService : ICloudinaryService
             throw;
         }
     }
-
-    public async Task<string> UploadImageAsync(Stream stream, string fileName, string folderName)
-    {
-        if (stream == null || stream.Length == 0)
-            throw new ArgumentException("Image stream is null or empty", nameof(stream));
-
-        var uploadParams = new ImageUploadParams
-        {
-            File = new FileDescription(fileName, stream),
-            UseFilename = true,
-            UniqueFilename = false,
-            Overwrite = true,
-            Folder = folderName
-        };
-
-        var uploadResult = await cloudinary.UploadAsync(uploadParams);
-
-        if (uploadResult.StatusCode != System.Net.HttpStatusCode.OK)
-            throw new Exception($"Cloudinary image upload failed: {uploadResult.Error?.Message}");
-
-        return uploadResult.SecureUrl.ToString();
-    }
-
-    public async Task<string> UploadVideoAsync(Stream stream, string fileName, string folderName)
-    {
-        if (stream == null || stream.Length == 0)
-            throw new ArgumentException("Video stream is null or empty", nameof(stream));
-
-        var uploadParams = new VideoUploadParams
-        {
-            File = new FileDescription(fileName, stream),
-            UseFilename = true,
-            UniqueFilename = false,
-            Overwrite = true,
-            Folder = folderName
-        };
-
-        var uploadResult = await cloudinary.UploadAsync(uploadParams);
-
-        if (uploadResult.StatusCode != System.Net.HttpStatusCode.OK)
-            throw new Exception($"Cloudinary video upload failed: {uploadResult.Error?.Message}");
-
-        return uploadResult.SecureUrl.ToString();
-    }
-
 }

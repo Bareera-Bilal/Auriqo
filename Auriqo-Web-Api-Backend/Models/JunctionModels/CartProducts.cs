@@ -20,6 +20,8 @@ public class CartProduct
 
     [JsonIgnore]
     public Product? Product { get; set; } // NAVIGATION PROPERTY
+
+    public required decimal ProductPrice { get; set; }
     public required int Quantity { get; set; } = 1;
     public string? Size { get; set; }
     public string? Color { get; set; }

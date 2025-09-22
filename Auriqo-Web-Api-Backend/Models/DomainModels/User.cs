@@ -17,7 +17,7 @@ public string? Phone {get; set;}
 public string? ProfilePicUrl {get; set;}
 
 //Navigation Properties:
-public ICollection<Address> Addresses {get; set;} 
+public required ICollection<Address> Addresses {get; set;} 
 public Cart? Cart {get; set;}
 public ICollection<Order>? Orders{get; set;} = []; //collection of orders placed by the user
 
